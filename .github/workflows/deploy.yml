@@ -1,0 +1,30 @@
+name: Desplegar en GCP
+on:
+  push:
+    branches:
+      - "*"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - id: auth
+        name: "Autenticación en Google Cloud"
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+
+      - id: delete
+        name: "Eliminar Cloud Function anterior"
+        run: |
+          gcloud run services delete test-jean --region=us-central1 --quiet || true
+
+      - id: deploy
+        name: "Desplegar Cloud Function"
+        uses: google-github-actions/deploy-cloud-run@v2
+        with:
+          service: test-jean
+          runtime: python312
+          entry-point: hello_http
+          region: us-central1
